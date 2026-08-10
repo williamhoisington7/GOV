@@ -12,6 +12,34 @@ Prepared for civic record and professional presentment (including informational 
 |------|---------|
 | [`CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md`](./CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md) | Full organic constitution, governance, Bill of Rights, and Signature Annex |
 | [`SIGNATURE_PACKET.md`](./SIGNATURE_PACKET.md) | Printable founding / citizen-roll / witness / notary packet |
+| [`signature_tool/`](./signature_tool/) | **Signature Manager app + Windows EXE build** (one-time founding + multi-add citizen roll) |
+
+## Signature Manager EXE
+
+Electronic companion to the wet-ink packet:
+
+| Part | Rule in the app |
+|:--|:--|
+| **A — Founding Signature** | **William Franklin Hoisington IV** only · typed name must match exactly · **locks permanently** after one use |
+| **B — Citizen Signature Roll** | **Multi-add** · new numbered entry for every new citizen |
+
+**Run from source:**
+
+```bash
+python signature_tool/signature_manager.py
+```
+
+**Build Windows EXE** (on Windows, or via the GitHub Actions workflow `Build Signature Manager EXE`):
+
+```bat
+cd signature_tool
+build_windows.bat
+```
+
+Output: `signature_tool\dist\PiedonianSignatureManager.exe`  
+Data file (beside the EXE): `data\civic_signatures.json`  
+
+See [`signature_tool/README.md`](./signature_tool/README.md) for full usage.
 
 ## Constitution highlights
 

@@ -1,0 +1,49 @@
+name: Build Signature Manager EXE
+
+on:
+  push:
+    branches: [main, master, "copilot/**"]
+    paths:
+      - "signature_tool/**"
+      - ".github/workflows/build-signature-exe.yml"
+  pull_request:
+    paths:
+      - "signature_tool/**"
+      - ".github/workflows/build-signature-exe.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Self-test
+        run: python signature_tool/signature_manager.py --self-test
+
+  windows-exe:
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip && python -m pip install -r signature_tool/requirements-build.txt
+      - name: Build EXE
+        working-directory: signature_tool
+        run: |
+          python signature_manager.py --self-test
+          python -m PyInstaller --noconfirm PiedonianSignatureManager.spec
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PiedonianSignatureManager-windows
+          path: signature_tool/dist/PiedonianSignatureManager.exe
+          if-no-files-found: error

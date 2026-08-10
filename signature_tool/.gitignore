@@ -1,0 +1,11 @@
+build/
+dist/
+*.spec.bak
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+data/civic_signatures.json
+data/_self_test/
+data/*.tmp
