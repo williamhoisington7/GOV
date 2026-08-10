@@ -1,0 +1,70 @@
+name: Build Civic Document EXE
+
+on:
+  push:
+    branches: [main, master, "copilot/**"]
+    paths:
+      - "PiedonianCivicDocument/**"
+      - "CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md"
+      - "SIGNATURE_PACKET.md"
+      - "PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md"
+      - ".github/workflows/build-civic-document-exe.yml"
+  pull_request:
+    paths:
+      - "PiedonianCivicDocument/**"
+      - "CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md"
+      - "SIGNATURE_PACKET.md"
+      - "PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md"
+      - ".github/workflows/build-civic-document-exe.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Sync content copies
+        run: |
+          cp CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md PiedonianCivicDocument/Content/
+          cp SIGNATURE_PACKET.md PiedonianCivicDocument/Content/
+          cp PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md PiedonianCivicDocument/Content/
+      - name: Self-test
+        working-directory: PiedonianCivicDocument
+        run: dotnet run -- --self-test
+
+  windows-exe:
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Sync content copies
+        shell: bash
+        run: |
+          cp CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md PiedonianCivicDocument/Content/
+          cp SIGNATURE_PACKET.md PiedonianCivicDocument/Content/
+          cp PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md PiedonianCivicDocument/Content/
+      - name: Publish Windows single-file EXE
+        working-directory: PiedonianCivicDocument
+        shell: bash
+        run: |
+          dotnet run -- --self-test
+          dotnet publish -c Release -r win-x64 --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:EnableCompressionInSingleFile=true \
+            -o dist
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PiedonianCivicDocument-windows
+          path: PiedonianCivicDocument/dist/PiedonianCivicDocument.exe
+          if-no-files-found: error

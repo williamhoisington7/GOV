@@ -1,0 +1,8 @@
+bin/
+obj/
+dist/
+data/*.json
+data/_self_test/
+*.user
+*.suo
+.vs/
