@@ -12,6 +12,9 @@ on:
       - ".github/workflows/build-signature-exe.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -44,4 +47,3 @@ jobs:
           name: PiedonianSignatureManager-windows
           path: signature_tool/dist/PiedonianSignatureManager.exe
           if-no-files-found: error
-
