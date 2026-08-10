@@ -541,6 +541,14 @@ internal sealed class LocalServer
             return;
         }
 
+        // Force-download the full Constitution markdown as a file (Content-Disposition: attachment).
+        if (path == "/api/download/constitution")
+        {
+            await WriteFile(res, ResolveContent("CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md"), "text/markdown; charset=utf-8",
+                "attachment; filename=\"CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md\"").ConfigureAwait(false);
+            return;
+        }
+
         if (path == "/api/export.json")
         {
             var body = RecordStore.Load(_recordOverride).ToJsonString(JsonUtil.Options);
@@ -851,10 +859,10 @@ internal sealed class LocalServer
         };
     }
 
-    private static async Task WriteFile(HttpListenerResponse res, string path, string contentType)
+    private static async Task WriteFile(HttpListenerResponse res, string path, string contentType, string? disposition = null)
     {
         var bytes = await File.ReadAllBytesAsync(path).ConfigureAwait(false);
-        await WriteBytes(res, 200, bytes, contentType).ConfigureAwait(false);
+        await WriteBytes(res, 200, bytes, contentType, disposition).ConfigureAwait(false);
     }
 
     private static async Task WriteJson(HttpListenerResponse res, int status, object payload)
@@ -1003,6 +1011,23 @@ internal static class SelfTest
                     !md.Contains("FOUNDING SIGNATURE CLOSED", StringComparison.Ordinal) ||
                     !md.Contains("2026-08-10", StringComparison.Ordinal))
                     throw new Exception("export markdown incomplete");
+
+                // Constitution file download must return the full document as an attachment.
+                using (var constitutionDl = client.GetAsync("/api/download/constitution").GetAwaiter().GetResult())
+                {
+                    if (!constitutionDl.IsSuccessStatusCode)
+                        throw new Exception("constitution download failed: HTTP " + (int)constitutionDl.StatusCode);
+                    var disposition = constitutionDl.Content.Headers.ContentDisposition?.ToString()
+                        ?? (constitutionDl.Headers.TryGetValues("Content-Disposition", out var vals)
+                            ? string.Join(",", vals)
+                            : "");
+                    if (disposition.IndexOf("attachment", StringComparison.OrdinalIgnoreCase) < 0 ||
+                        disposition.IndexOf("CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md", StringComparison.OrdinalIgnoreCase) < 0)
+                        throw new Exception("constitution download missing attachment disposition");
+                    var constitutionBody = constitutionDl.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    if (!constitutionBody.Contains("Constitution of the Piedonian Woods", StringComparison.Ordinal))
+                        throw new Exception("constitution download body incomplete");
+                }
 
                 Console.WriteLine("SELF-TEST OK");
                 return 0;
