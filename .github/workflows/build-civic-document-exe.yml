@@ -56,12 +56,12 @@ jobs:
         working-directory: PiedonianCivicDocument
         shell: bash
         run: |
-          dotnet run -- --self-test
-          dotnet publish -c Release -r win-x64 --self-contained true \
-            -p:PublishSingleFile=true \
-            -p:IncludeNativeLibrariesForSelfExtract=true \
-            -p:EnableCompressionInSingleFile=true \
-            -o dist
+          chmod +x build_windows.sh
+          ./build_windows.sh
+          test -f dist/PiedonianCivicDocument.exe
+          # Confirm no sidecar asset folders are required
+          test ! -d dist/wwwroot
+          test ! -d dist/Content
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:

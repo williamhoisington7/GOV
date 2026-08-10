@@ -44,7 +44,7 @@ build_windows.bat
 ```
 
 Output: `PiedonianCivicDocument\dist\PiedonianCivicDocument.exe`  
-Data file (beside the EXE): `data\civic_signatures.json`
+True single-file EXE (UI + documents embedded). Data file created beside the EXE on first run: `data\civic_signatures.json`
 
 See [`PiedonianCivicDocument/README.md`](./PiedonianCivicDocument/README.md) for full usage.
 

@@ -10,10 +10,20 @@
     <Authors>Piedonian Woods</Authors>
     <Description>Standalone Windows 11 civic document application combining the Constitution and Signature Packet with electronic signing.</Description>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- True single-file EXE: UI + documents are embedded; only signature data is written beside the EXE. -->
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Include="Content\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Dev/run convenience copies -->
+    <None Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <None Include="Content\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <!-- Embedded so published single-file EXE is fully standalone -->
+    <EmbeddedResource Include="wwwroot\**\*">
+      <LogicalName>assets.wwwroot.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Content\**\*">
+      <LogicalName>assets.Content.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

@@ -47,24 +47,25 @@ cd PiedonianCivicDocument
 ./build_windows.sh
 ```
 
-Output (single-file self-contained):
+Output (true single-file self-contained EXE — UI + Constitution + Signature Packet embedded):
 
 ```text
 PiedonianCivicDocument/dist/PiedonianCivicDocument.exe
 ```
 
-Double-click the EXE on Windows 11. Signature data is stored beside the EXE:
+Double-click the EXE on Windows 11. No extra folders are required next to the EXE. Signature data is created beside the EXE on first run:
 
 ```text
 data/civic_signatures.json
 ```
 
-GitHub Actions workflow **Build Civic Document EXE** also produces the artifact on every change under `PiedonianCivicDocument/`.
+GitHub Actions workflow **Build Civic Document EXE** uploads that single EXE artifact on every change under `PiedonianCivicDocument/`.
 
 ## Stack
 
 - **C#** / .NET 8 — local HTTP host, record store, hash lock for founding signature
-- **HTML + CSS + JavaScript** — document viewer, signature pads, tabs, export
+- **HTML + CSS + JavaScript** — document viewer, signature pads, tabs, export (embedded in the EXE)
+- Combined Constitution + Signature Packet markdown embedded in the EXE
 - No external NuGet packages required at runtime
 
 ## Legal note

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -23,8 +24,40 @@ internal static class AppConstants
 
 internal static class Paths
 {
-    public static string AppRoot =>
-        AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    /// <summary>
+    /// Durable data lives next to the running EXE when possible; falls back to BaseDirectory for <c>dotnet run</c>.
+    /// </summary>
+    public static string AppRoot
+    {
+        get
+        {
+            // Prefer the actual process image directory for published EXE / native hosts.
+            try
+            {
+                var processPath = Environment.ProcessPath;
+                if (!string.IsNullOrWhiteSpace(processPath))
+                {
+                    var processDir = Path.GetDirectoryName(Path.GetFullPath(processPath));
+                    if (!string.IsNullOrWhiteSpace(processDir))
+                    {
+                        var fileName = Path.GetFileName(processPath);
+                        // When launched via `dotnet run` / `dotnet exec`, ProcessPath is the host — use BaseDirectory.
+                        if (!fileName.Equals("dotnet", StringComparison.OrdinalIgnoreCase) &&
+                            !fileName.Equals("dotnet.exe", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return processDir;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // fall through
+            }
+
+            return AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+    }
 
     public static string WwwRoot => Path.Combine(AppRoot, "wwwroot");
     public static string ContentRoot => Path.Combine(AppRoot, "Content");
@@ -39,6 +72,110 @@ internal static class Paths
     }
 
     public static string RecordFile => Path.Combine(DataDir, "civic_signatures.json");
+}
+
+/// <summary>
+/// Resolves UI and document assets from adjacent folders (dev) or embedded resources (single-file EXE).
+/// </summary>
+internal static class BundledAssets
+{
+    private static readonly object Gate = new();
+    private static string? _wwwRoot;
+    private static string? _contentRoot;
+
+    public static string WwwRoot
+    {
+        get
+        {
+            EnsureMaterialized();
+            return _wwwRoot!;
+        }
+    }
+
+    public static string ContentRoot
+    {
+        get
+        {
+            EnsureMaterialized();
+            return _contentRoot!;
+        }
+    }
+
+    public static void EnsureMaterialized()
+    {
+        if (_wwwRoot != null && _contentRoot != null)
+            return;
+
+        lock (Gate)
+        {
+            if (_wwwRoot != null && _contentRoot != null)
+                return;
+
+            if (TryUseDisk(Paths.WwwRoot, Paths.ContentRoot, out var www, out var content) ||
+                TryUseDisk(
+                    Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "wwwroot")),
+                    Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "Content")),
+                    out www, out content) ||
+                TryUseDisk(
+                    Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "PiedonianCivicDocument", "wwwroot")),
+                    Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "PiedonianCivicDocument", "Content")),
+                    out www, out content))
+            {
+                _wwwRoot = www;
+                _contentRoot = content;
+                return;
+            }
+
+            var extractRoot = Path.Combine(
+                Path.GetTempPath(),
+                "piedonian-civic-document-assets",
+                Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0");
+            www = Path.Combine(extractRoot, "wwwroot");
+            content = Path.Combine(extractRoot, "Content");
+            Directory.CreateDirectory(www);
+            Directory.CreateDirectory(content);
+            ExtractPrefix("assets.wwwroot.", www);
+            ExtractPrefix("assets.Content.", content);
+
+            if (!File.Exists(Path.Combine(www, "index.html")))
+                throw new FileNotFoundException("Embedded wwwroot/index.html missing from assembly.");
+            if (!File.Exists(Path.Combine(content, "PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md")))
+                throw new FileNotFoundException("Embedded combined civic document missing from assembly.");
+
+            _wwwRoot = www;
+            _contentRoot = content;
+        }
+    }
+
+    private static bool TryUseDisk(string www, string content, out string wwwOut, out string contentOut)
+    {
+        wwwOut = www;
+        contentOut = content;
+        return Directory.Exists(www) &&
+               File.Exists(Path.Combine(www, "index.html")) &&
+               Directory.Exists(content) &&
+               File.Exists(Path.Combine(content, "PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md"));
+    }
+
+    private static void ExtractPrefix(string prefix, string destDir)
+    {
+        var asm = Assembly.GetExecutingAssembly();
+        foreach (var name in asm.GetManifestResourceNames())
+        {
+            if (!name.StartsWith(prefix, StringComparison.Ordinal))
+                continue;
+            var fileName = name[prefix.Length..];
+            if (fileName.Length == 0 || fileName.Contains('/') || fileName.Contains('\\'))
+                continue;
+            var dest = Path.Combine(destDir, fileName);
+            if (File.Exists(dest))
+                continue;
+            using var stream = asm.GetManifestResourceStream(name)
+                ?? throw new InvalidOperationException($"Missing embedded resource: {name}");
+            using var fs = File.Create(dest);
+            stream.CopyTo(fs);
+        }
+    }
 }
 
 internal static class JsonUtil
@@ -834,6 +971,13 @@ internal static class SelfTest
         var testFile = Path.Combine(testDir, "civic_signatures.json");
         try
         {
+            // Also verify embedded resource names are present in the assembly.
+            var embedded = Assembly.GetExecutingAssembly().GetManifestResourceNames()
+                .Where(n => n.StartsWith("assets.", StringComparison.Ordinal))
+                .ToArray();
+            if (embedded.Length < 4)
+                throw new Exception($"expected embedded assets, found {embedded.Length}");
+
             var www = FindWwwRoot();
             var content = FindContentRoot();
             var server = new LocalServer(www, content, testFile);
@@ -927,41 +1071,9 @@ internal static class SelfTest
         }
     }
 
-    public static string FindWwwRoot()
-    {
-        var candidates = new[]
-        {
-            Paths.WwwRoot,
-            Path.GetFullPath(Path.Combine(Paths.AppRoot, "wwwroot")),
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "wwwroot")),
-            Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "wwwroot")),
-            Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "PiedonianCivicDocument", "wwwroot")),
-        };
-        foreach (var c in candidates)
-        {
-            if (Directory.Exists(c) && File.Exists(Path.Combine(c, "index.html")))
-                return c;
-        }
-        throw new DirectoryNotFoundException("wwwroot not found");
-    }
+    public static string FindWwwRoot() => BundledAssets.WwwRoot;
 
-    public static string FindContentRoot()
-    {
-        var candidates = new[]
-        {
-            Paths.ContentRoot,
-            Path.GetFullPath(Path.Combine(Paths.AppRoot, "Content")),
-            Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "Content")),
-            Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "PiedonianCivicDocument", "Content")),
-            Path.GetFullPath(Path.Combine(Environment.CurrentDirectory)),
-        };
-        foreach (var c in candidates)
-        {
-            if (File.Exists(Path.Combine(c, "PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md")))
-                return c;
-        }
-        throw new DirectoryNotFoundException("Content root not found");
-    }
+    public static string FindContentRoot() => BundledAssets.ContentRoot;
 }
 
 public static class Program
@@ -971,6 +1083,7 @@ public static class Program
         if (args.Any(a => a is "--self-test" or "self-test"))
             return SelfTest.Run();
 
+        BundledAssets.EnsureMaterialized();
         var www = SelfTest.FindWwwRoot();
         var content = SelfTest.FindContentRoot();
         var server = new LocalServer(www, content);
