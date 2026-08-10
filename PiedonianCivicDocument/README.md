@@ -9,7 +9,7 @@ into one electronically signable civic instrument for Windows 11.
 
 | Part | Behavior |
 |:--|:--|
-| **Combined Document** | Full Constitution + Signature Packet in one viewer (print / Save PDF) |
+| **Combined Document** | Full Constitution + Signature Packet in one viewer (print / Save PDF / download Constitution file) |
 | **A — Founding Signature** | William Franklin Hoisington IV only · locks permanently after one use |
 | **B — Citizen Signature Roll** | Multi-add unlimited citizen enrollments · **signed date required** |
 | **C–F** | Optional Co-President, Justice, witness, notary · **signature date required** |
@@ -82,7 +82,7 @@ The app serves a local UI at `http://127.0.0.1:8777/` (or the next free port) an
 ## How to sign and keep a record
 
 1. Open the app (EXE or `dotnet run`)
-2. Review the **Combined Document** tab
+2. Review the **Combined Document** tab (use **Download Constitution** to save the full constitution markdown file)
 3. Open the signature tab you need (Founding / Citizen / Optional)
 4. Enter the typed signature (and drawing if desired)
 5. **Enter the date the signee signs** (required for citizen and optional parts)
