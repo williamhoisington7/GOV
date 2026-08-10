@@ -23,6 +23,27 @@ internal static class AppConstants
 
 internal static class Paths
 {
+    /// <summary>
+    /// Directory that contains the running EXE (portable install root).
+    /// Signature records are always written here so they survive single-file extraction.
+    /// </summary>
+    public static string ExeDir
+    {
+        get
+        {
+            var processPath = Environment.ProcessPath;
+            if (!string.IsNullOrWhiteSpace(processPath))
+            {
+                var dir = Path.GetDirectoryName(Path.GetFullPath(processPath));
+                if (!string.IsNullOrWhiteSpace(dir))
+                    return dir;
+            }
+
+            return AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+    }
+
+    /// <summary>Content/UI probe root (BaseDirectory may differ under some hosts).</summary>
     public static string AppRoot =>
         AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
@@ -32,7 +53,7 @@ internal static class Paths
     {
         get
         {
-            var dir = Path.Combine(AppRoot, "data");
+            var dir = Path.Combine(ExeDir, "data");
             Directory.CreateDirectory(dir);
             return dir;
         }
@@ -631,9 +652,19 @@ internal sealed class LocalServer
             var signedDate = GetStr(payload, "signed_date", "signedDate");
             var witness = GetStr(payload, "witness");
             var sigText = GetStr(payload, "signature_text", "signatureText");
-            if (printedName.Length == 0 || grantedBy.Length == 0 || grantedDate.Length == 0 || sigText.Length == 0)
+            if (printedName.Length == 0 || grantedBy.Length == 0 || grantedDate.Length == 0 ||
+                signedDate.Length == 0 || sigText.Length == 0)
             {
-                await WriteJson(res, 400, new { error = "printed_name, granted_by, granted_date, and signature_text are required." }).ConfigureAwait(false);
+                await WriteJson(res, 400, new
+                {
+                    error = "printed_name, granted_by, granted_date, signed_date, and signature_text are required. The signee must date the signature."
+                }).ConfigureAwait(false);
+                return;
+            }
+
+            if (!IsIsoDate(signedDate) || !IsIsoDate(grantedDate))
+            {
+                await WriteJson(res, 400, new { error = "granted_date and signed_date must be YYYY-MM-DD." }).ConfigureAwait(false);
                 return;
             }
 
@@ -656,7 +687,7 @@ internal sealed class LocalServer
                 ["printedName"] = printedName,
                 ["grantedBy"] = grantedBy,
                 ["grantedDate"] = grantedDate,
-                ["signedDate"] = signedDate.Length > 0 ? signedDate : DateTime.UtcNow.ToString("yyyy-MM-dd"),
+                ["signedDate"] = signedDate,
                 ["witness"] = witness.Length > 0 ? witness : null,
                 ["signatureText"] = sigText,
                 ["signatureImagePngB64"] = imgB64,
@@ -671,9 +702,15 @@ internal sealed class LocalServer
         if (path == "/api/optional/co_president" || path == "/api/optional/coPresident")
         {
             var sigText = GetStr(payload, "signature_text", "signatureText");
-            if (sigText.Length == 0)
+            var date = GetStr(payload, "date");
+            if (sigText.Length == 0 || date.Length == 0)
             {
-                await WriteJson(res, 400, new { error = "signature_text is required." }).ConfigureAwait(false);
+                await WriteJson(res, 400, new { error = "signature_text and date are required. The signee must date the signature." }).ConfigureAwait(false);
+                return;
+            }
+            if (!IsIsoDate(date))
+            {
+                await WriteJson(res, 400, new { error = "date must be YYYY-MM-DD." }).ConfigureAwait(false);
                 return;
             }
             var opt = record["optional"]!.AsObject();
@@ -682,7 +719,7 @@ internal sealed class LocalServer
                 ["printedName"] = "Tommy James Lindsey",
                 ["capacity"] = "Co-President (acknowledgment)",
                 ["signatureText"] = sigText,
-                ["date"] = NonEmpty(GetStr(payload, "date"), DateTime.UtcNow.ToString("yyyy-MM-dd")),
+                ["date"] = date,
                 ["recordedAtUtc"] = DateTime.UtcNow.ToString("O")
             };
             RecordStore.Save(record, _recordOverride);
@@ -693,9 +730,15 @@ internal sealed class LocalServer
         if (path == "/api/optional/justice")
         {
             var sigText = GetStr(payload, "signature_text", "signatureText");
-            if (sigText.Length == 0)
+            var date = GetStr(payload, "date");
+            if (sigText.Length == 0 || date.Length == 0)
             {
-                await WriteJson(res, 400, new { error = "signature_text is required." }).ConfigureAwait(false);
+                await WriteJson(res, 400, new { error = "signature_text and date are required. The signee must date the signature." }).ConfigureAwait(false);
+                return;
+            }
+            if (!IsIsoDate(date))
+            {
+                await WriteJson(res, 400, new { error = "date must be YYYY-MM-DD." }).ConfigureAwait(false);
                 return;
             }
             var opt = record["optional"]!.AsObject();
@@ -704,7 +747,7 @@ internal sealed class LocalServer
                 ["printedName"] = "Ramon Santiago IV",
                 ["capacity"] = "Justice of Democracy",
                 ["signatureText"] = sigText,
-                ["date"] = NonEmpty(GetStr(payload, "date"), DateTime.UtcNow.ToString("yyyy-MM-dd")),
+                ["date"] = date,
                 ["recordedAtUtc"] = DateTime.UtcNow.ToString("O")
             };
             RecordStore.Save(record, _recordOverride);
@@ -716,9 +759,15 @@ internal sealed class LocalServer
         {
             var printed = GetStr(payload, "printed_name", "printedName");
             var sigText = GetStr(payload, "signature_text", "signatureText");
-            if (printed.Length == 0 || sigText.Length == 0)
+            var date = GetStr(payload, "date");
+            if (printed.Length == 0 || sigText.Length == 0 || date.Length == 0)
             {
-                await WriteJson(res, 400, new { error = "printed_name and signature_text are required." }).ConfigureAwait(false);
+                await WriteJson(res, 400, new { error = "printed_name, signature_text, and date are required. The signee must date the signature." }).ConfigureAwait(false);
+                return;
+            }
+            if (!IsIsoDate(date))
+            {
+                await WriteJson(res, 400, new { error = "date must be YYYY-MM-DD." }).ConfigureAwait(false);
                 return;
             }
             var opt = record["optional"]!.AsObject();
@@ -726,7 +775,7 @@ internal sealed class LocalServer
             {
                 ["printedName"] = printed,
                 ["signatureText"] = sigText,
-                ["date"] = NonEmpty(GetStr(payload, "date"), DateTime.UtcNow.ToString("yyyy-MM-dd")),
+                ["date"] = date,
                 ["recordedAtUtc"] = DateTime.UtcNow.ToString("O")
             };
             RecordStore.Save(record, _recordOverride);
@@ -740,9 +789,15 @@ internal sealed class LocalServer
             var sigText = GetStr(payload, "signature_text", "signatureText");
             var commission = GetStr(payload, "commission_expires", "commissionExpires");
             var county = GetStr(payload, "county");
-            if (printed.Length == 0 || sigText.Length == 0)
+            var date = GetStr(payload, "date");
+            if (printed.Length == 0 || sigText.Length == 0 || date.Length == 0)
             {
-                await WriteJson(res, 400, new { error = "printed_name and signature_text are required." }).ConfigureAwait(false);
+                await WriteJson(res, 400, new { error = "printed_name, signature_text, and date are required. The signee must date the signature." }).ConfigureAwait(false);
+                return;
+            }
+            if (!IsIsoDate(date))
+            {
+                await WriteJson(res, 400, new { error = "date must be YYYY-MM-DD." }).ConfigureAwait(false);
                 return;
             }
             var opt = record["optional"]!.AsObject();
@@ -752,7 +807,7 @@ internal sealed class LocalServer
                 ["signatureText"] = sigText,
                 ["commissionExpires"] = commission.Length > 0 ? commission : null,
                 ["county"] = county.Length > 0 ? county : null,
-                ["date"] = NonEmpty(GetStr(payload, "date"), DateTime.UtcNow.ToString("yyyy-MM-dd")),
+                ["date"] = date,
                 ["recordedAtUtc"] = DateTime.UtcNow.ToString("O")
             };
             RecordStore.Save(record, _recordOverride);
@@ -777,7 +832,9 @@ internal sealed class LocalServer
         return "";
     }
 
-    private static string NonEmpty(string value, string fallback) => value.Length > 0 ? value : fallback;
+    private static bool IsIsoDate(string value) =>
+        DateTime.TryParseExact(value, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out _);
 
     private static string MimeFromPath(string path)
     {
@@ -885,6 +942,18 @@ internal static class SelfTest
                 if ((int)again.StatusCode != 409)
                     throw new Exception("expected 409 on second founding signature");
 
+                // signed_date is required — signee must date the signature
+                var missingDate = client.PostAsync("/api/citizen",
+                    new StringContent(JsonSerializer.Serialize(new
+                    {
+                        printed_name = "No Date Citizen",
+                        granted_by = AppConstants.FoundingName,
+                        granted_date = "2026-08-10",
+                        signature_text = "No Date Citizen"
+                    }), Encoding.UTF8, "application/json")).GetAwaiter().GetResult();
+                if ((int)missingDate.StatusCode != 400)
+                    throw new Exception("expected 400 when citizen signed_date is missing");
+
                 foreach (var name in new[] { "Alice Citizen", "Bob Citizen" })
                 {
                     var body = JsonSerializer.Serialize(new
@@ -900,17 +969,39 @@ internal static class SelfTest
                     c.EnsureSuccessStatusCode();
                 }
 
+                var optMissingDate = client.PostAsync("/api/optional/co_president",
+                    new StringContent(JsonSerializer.Serialize(new { signature_text = "Tommy James Lindsey" }),
+                        Encoding.UTF8, "application/json")).GetAwaiter().GetResult();
+                if ((int)optMissingDate.StatusCode != 400)
+                    throw new Exception("expected 400 when optional acknowledgment date is missing");
+
+                var optOk = client.PostAsync("/api/optional/co_president",
+                    new StringContent(JsonSerializer.Serialize(new
+                    {
+                        signature_text = "Tommy James Lindsey",
+                        date = "2026-08-10"
+                    }), Encoding.UTF8, "application/json")).GetAwaiter().GetResult();
+                optOk.EnsureSuccessStatusCode();
+
                 var final = client.GetStringAsync("/api/record").GetAwaiter().GetResult();
                 using (var finalDoc = JsonDocument.Parse(final))
                 {
                     var count = finalDoc.RootElement.GetProperty("citizens").GetArrayLength();
                     if (count != 2)
                         throw new Exception("expected 2 citizens");
+                    var signed = finalDoc.RootElement.GetProperty("citizens")[0].GetProperty("signedDate").GetString();
+                    if (signed != "2026-08-10")
+                        throw new Exception("citizen signedDate not persisted");
                 }
+
+                // Record must persist beside the EXE data path when using default store
+                if (!File.Exists(testFile))
+                    throw new Exception("record file was not saved");
 
                 var md = client.GetStringAsync("/api/export.md").GetAwaiter().GetResult();
                 if (!md.Contains("Alice Citizen", StringComparison.Ordinal) ||
-                    !md.Contains("FOUNDING SIGNATURE CLOSED", StringComparison.Ordinal))
+                    !md.Contains("FOUNDING SIGNATURE CLOSED", StringComparison.Ordinal) ||
+                    !md.Contains("2026-08-10", StringComparison.Ordinal))
                     throw new Exception("export markdown incomplete");
 
                 Console.WriteLine("SELF-TEST OK");
@@ -932,6 +1023,7 @@ internal static class SelfTest
         var candidates = new[]
         {
             Paths.WwwRoot,
+            Path.GetFullPath(Path.Combine(Paths.ExeDir, "wwwroot")),
             Path.GetFullPath(Path.Combine(Paths.AppRoot, "wwwroot")),
             Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "wwwroot")),
             Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "wwwroot")),
@@ -942,7 +1034,8 @@ internal static class SelfTest
             if (Directory.Exists(c) && File.Exists(Path.Combine(c, "index.html")))
                 return c;
         }
-        throw new DirectoryNotFoundException("wwwroot not found");
+        throw new DirectoryNotFoundException(
+            "wwwroot not found. Keep the wwwroot folder next to PiedonianCivicDocument.exe (use the full ZIP package).");
     }
 
     public static string FindContentRoot()
@@ -950,6 +1043,7 @@ internal static class SelfTest
         var candidates = new[]
         {
             Paths.ContentRoot,
+            Path.GetFullPath(Path.Combine(Paths.ExeDir, "Content")),
             Path.GetFullPath(Path.Combine(Paths.AppRoot, "Content")),
             Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "Content")),
             Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "PiedonianCivicDocument", "Content")),
@@ -960,7 +1054,8 @@ internal static class SelfTest
             if (File.Exists(Path.Combine(c, "PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md")))
                 return c;
         }
-        throw new DirectoryNotFoundException("Content root not found");
+        throw new DirectoryNotFoundException(
+            "Content root not found. Keep the Content folder next to PiedonianCivicDocument.exe (use the full ZIP package).");
     }
 }
 
@@ -977,9 +1072,10 @@ public static class Program
         server.Start();
 
         Console.WriteLine(AppConstants.AppName);
-        Console.WriteLine($"Open: {server.Url}");
-        Console.WriteLine($"Data: {Paths.RecordFile}");
-        Console.WriteLine("Combined document + electronic signature UI for Windows 11.");
+        Console.WriteLine($"Open in browser: {server.Url}");
+        Console.WriteLine($"Install folder:  {Paths.ExeDir}");
+        Console.WriteLine($"Signature record: {Paths.RecordFile}");
+        Console.WriteLine("Workflow: open document → sign → date signature → save → export record.");
         Console.WriteLine("Press Ctrl+C to stop.");
 
         if (!args.Any(a => a is "--no-browser" or "no-browser"))

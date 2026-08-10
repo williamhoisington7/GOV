@@ -47,24 +47,48 @@ jobs:
         with:
           dotnet-version: "8.0.x"
       - name: Sync content copies
-        shell: bash
+        shell: pwsh
         run: |
-          cp CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md PiedonianCivicDocument/Content/
-          cp SIGNATURE_PACKET.md PiedonianCivicDocument/Content/
-          cp PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md PiedonianCivicDocument/Content/
-      - name: Publish Windows single-file EXE
+          Copy-Item CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md PiedonianCivicDocument/Content/
+          Copy-Item SIGNATURE_PACKET.md PiedonianCivicDocument/Content/
+          Copy-Item PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md PiedonianCivicDocument/Content/
+      - name: Publish Windows portable package
         working-directory: PiedonianCivicDocument
-        shell: bash
+        shell: pwsh
         run: |
           dotnet run -- --self-test
-          dotnet publish -c Release -r win-x64 --self-contained true \
-            -p:PublishSingleFile=true \
-            -p:IncludeNativeLibrariesForSelfExtract=true \
-            -p:EnableCompressionInSingleFile=true \
+          if (Test-Path dist) { Remove-Item -Recurse -Force dist }
+          if (Test-Path package) { Remove-Item -Recurse -Force package }
+          New-Item -ItemType Directory -Path dist, package | Out-Null
+          dotnet publish -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
             -o dist
-      - name: Upload EXE artifact
+          Get-ChildItem dist -Filter *.pdb -ErrorAction SilentlyContinue | Remove-Item -Force
+          Get-ChildItem dist -Filter *.xml -ErrorAction SilentlyContinue | Remove-Item -Force
+          New-Item -ItemType Directory -Path dist/data -Force | Out-Null
+          New-Item -ItemType File -Path dist/data/.gitkeep -Force | Out-Null
+          # Full portable package — EXE alone is not enough (needs wwwroot + Content)
+          $packageName = "PiedonianCivicDocument-windows-x64"
+          $stage = "package/$packageName"
+          New-Item -ItemType Directory -Path $stage -Force | Out-Null
+          Copy-Item -Path dist/* -Destination $stage -Recurse -Force
+          Compress-Archive -Path "$stage/*" -DestinationPath "package/$packageName.zip" -Force
+          if (-not (Test-Path "package/$packageName.zip")) { throw "ZIP missing" }
+          if (-not (Test-Path "dist/PiedonianCivicDocument.exe")) { throw "EXE missing" }
+          if (-not (Test-Path "dist/wwwroot/index.html")) { throw "wwwroot missing" }
+          if (-not (Test-Path "dist/Content/PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md")) { throw "Content missing" }
+          Get-ChildItem package, dist | Format-Table Name, Length
+      - name: Upload portable ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PiedonianCivicDocument-windows
-          path: PiedonianCivicDocument/dist/PiedonianCivicDocument.exe
+          name: PiedonianCivicDocument-windows-x64
+          path: PiedonianCivicDocument/package/PiedonianCivicDocument-windows-x64.zip
+          if-no-files-found: error
+      - name: Upload unpacked folder artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PiedonianCivicDocument-windows-folder
+          path: PiedonianCivicDocument/dist/
           if-no-files-found: error

@@ -24,10 +24,23 @@ Combines the Constitution and Signature Packet into **one** electronically signa
 |:--|:--|
 | **Combined Document** | Full text viewer (Constitution + Packet) · print / Save PDF |
 | **A — Founding Signature** | **William Franklin Hoisington IV** only · typed name must match exactly · **locks permanently** after one use |
-| **B — Citizen Signature Roll** | **Multi-add** · new numbered entry for every new citizen |
-| **C–F** | Optional Co-President, Justice, witness, and notary acknowledgments |
+| **B — Citizen Signature Roll** | **Multi-add** · new numbered entry for every new citizen · **signee must date** the signature |
+| **C–F** | Optional Co-President, Justice, witness, and notary acknowledgments · **date required** |
+
+**Workflow:** open app → sign → **date the signature** → save → keep record / export.
 
 **Stack:** C# (.NET 8) backend · HTML + CSS + JavaScript UI
+
+### Download the EXE package
+
+The Windows binary is built by GitHub Actions (not committed to git). After a green run of **Build Civic Document EXE**:
+
+1. GitHub → **Actions** → **Build Civic Document EXE** → latest successful run
+2. Download artifact **`PiedonianCivicDocument-windows-x64`** (ZIP)
+3. Unzip on Windows 11 and double-click `PiedonianCivicDocument.exe`
+
+Keep `wwwroot\` and `Content\` next to the EXE (included in the ZIP).  
+Records save to `data\civic_signatures.json` beside the EXE.
 
 **Run from source:**
 
@@ -36,15 +49,17 @@ cd PiedonianCivicDocument
 dotnet run
 ```
 
-**Build Windows EXE** (on Windows, or via GitHub Actions workflow `Build Civic Document EXE`):
+**Build Windows package** (on Windows, Linux, or via GitHub Actions):
 
 ```bat
 cd PiedonianCivicDocument
 build_windows.bat
 ```
 
-Output: `PiedonianCivicDocument\dist\PiedonianCivicDocument.exe`  
-Data file (beside the EXE): `data\civic_signatures.json`
+Output:
+
+- `PiedonianCivicDocument\dist\PiedonianCivicDocument.exe`
+- `PiedonianCivicDocument\package\PiedonianCivicDocument-windows-x64.zip`
 
 See [`PiedonianCivicDocument/README.md`](./PiedonianCivicDocument/README.md) for full usage.
 
@@ -87,12 +102,14 @@ python signature_tool/signature_manager.py
 
 ## How to execute
 
-1. Open `PiedonianCivicDocument.exe` (or `dotnet run` in `PiedonianCivicDocument/`)
-2. Review the **Combined Document** tab (Constitution + Signature Packet)
-3. Affix the **Founding Signature** (Part A) **once**, then the app closes that block permanently
-4. Optionally record Co-President, Justice, witness, and notary acknowledgments
-5. For each new citizen, add a **Citizen Signature Roll** entry (Part B)
-6. Export JSON / Markdown records; file wet-ink originals with the civic record at the Seat when required
+1. Download/unzip the Windows package (see above) or run `dotnet run` in `PiedonianCivicDocument/`
+2. Open `PiedonianCivicDocument.exe` — browser UI opens locally
+3. Review the **Combined Document** tab (Constitution + Signature Packet)
+4. Affix the **Founding Signature** (Part A) **once**, then the app closes that block permanently
+5. Optionally record Co-President, Justice, witness, and notary acknowledgments (**each requires a signature date**)
+6. For each new citizen, add a **Citizen Signature Roll** entry (Part B) with **name, signature, and signed date**
+7. Records auto-save to `data/civic_signatures.json` beside the EXE; export JSON / Markdown anytime
+8. File wet-ink originals with the civic record at the Seat when required
 
 ## Legal note
 
