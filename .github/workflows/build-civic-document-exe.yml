@@ -43,6 +43,7 @@ jobs:
     needs: test
     permissions:
       contents: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
