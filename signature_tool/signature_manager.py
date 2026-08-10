@@ -550,24 +550,27 @@ function renderRecords(rec) {{
     ? '<span class="status-pill closed">CLOSED</span>'
     : '<span class="status-pill open">OPEN</span>';
   let html = '<p><strong>Founding status:</strong> ' + pill + '</p>';
-  html += '<p><strong>Document:</strong> ' + (rec.document || '') + '</p>';
-  html += '<p><strong>Seat:</strong> ' + (rec.seat || '') + '</p>';
+  html += '<p><strong>Document:</strong> ' + escapeHtml(rec.document || '') + '</p>';
+  html += '<p><strong>Seat:</strong> ' + escapeHtml(rec.seat || '') + '</p>';
   if (f.status === 'closed') {{
-    html += '<p><strong>Founding signatory:</strong> ' + (f.printed_name||'') + '</p>';
-    html += '<p><strong>Typed signature:</strong> ' + (f.signature_text||'') + '</p>';
-    html += '<p><strong>Closure:</strong> ' + (f.closure_legend||'') + '</p>';
+    html += '<p><strong>Founding signatory:</strong> ' + escapeHtml(f.printed_name||'') + '</p>';
+    html += '<p><strong>Typed signature:</strong> ' + escapeHtml(f.signature_text||'') + '</p>';
+    html += '<p><strong>Closure:</strong> ' + escapeHtml(f.closure_legend||'') + '</p>';
     if (f.signature_image_png_b64) {{
-      html += '<p><img class="thumb" alt="Founding signature" src="data:image/png;base64,' + f.signature_image_png_b64 + '" /></p>';
+      const b64 = safeBase64(f.signature_image_png_b64);
+      if (b64) {{
+        html += '<p><img class="thumb" alt="Founding signature" src="data:image/png;base64,' + b64 + '" /></p>';
+      }}
     }}
   }}
   const opt = rec.optional || {{}};
   if (opt.co_president) {{
-    html += '<p><strong>Co-President ack:</strong> ' + (opt.co_president.signature_text||'') + ' (' + (opt.co_president.date||'') + ')</p>';
+    html += '<p><strong>Co-President ack:</strong> ' + escapeHtml(opt.co_president.signature_text||'') + ' (' + escapeHtml(opt.co_president.date||'') + ')</p>';
   }}
   if (opt.justice) {{
-    html += '<p><strong>Justice ack:</strong> ' + (opt.justice.signature_text||'') + ' (' + (opt.justice.date||'') + ')</p>';
+    html += '<p><strong>Justice ack:</strong> ' + escapeHtml(opt.justice.signature_text||'') + ' (' + escapeHtml(opt.justice.date||'') + ')</p>';
   }}
-  html += '<p class="muted">Citizens enrolled: ' + (rec.citizens||[]).length + ' · Last update: ' + (rec.updated_at_utc || 'n/a') + '</p>';
+  html += '<p class="muted">Citizens enrolled: ' + (rec.citizens||[]).length + ' · Last update: ' + escapeHtml(rec.updated_at_utc || 'n/a') + '</p>';
   document.getElementById('record-summary').innerHTML = html;
 
   const citizens = rec.citizens || [];
@@ -576,12 +579,15 @@ function renderRecords(rec) {{
   }} else {{
     let t = '<table><thead><tr><th>#</th><th>Name</th><th>Granted by</th><th>Dates</th><th>Signature</th></tr></thead><tbody>';
     for (const c of citizens.slice().reverse()) {{
-      t += '<tr><td>' + c.entry_no + '</td><td>' + escapeHtml(c.printed_name||'') +
+      t += '<tr><td>' + escapeHtml(c.entry_no) + '</td><td>' + escapeHtml(c.printed_name||'') +
         '</td><td>' + escapeHtml(c.granted_by||'') +
         '</td><td>granted ' + escapeHtml(c.granted_date||'') + '<br/>signed ' + escapeHtml(c.signed_date||'') +
         '</td><td>' + escapeHtml(c.signature_text||'');
       if (c.signature_image_png_b64) {{
-        t += '<br/><img class="thumb" alt="sig" src="data:image/png;base64,' + c.signature_image_png_b64 + '" />';
+        const b64 = safeBase64(c.signature_image_png_b64);
+        if (b64) {{
+          t += '<br/><img class="thumb" alt="sig" src="data:image/png;base64,' + b64 + '" />';
+        }}
       }}
       t += '</td></tr>';
     }}
@@ -593,6 +599,11 @@ function renderRecords(rec) {{
 
 function escapeHtml(s) {{
   return String(s).replace(/[&<>"']/g, ch => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[ch]));
+}}
+
+function safeBase64(s) {{
+  const cleaned = String(s || '').replace(/[^A-Za-z0-9+/=]/g, '');
+  return cleaned.length ? cleaned : '';
 }}
 
 async function refresh() {{
@@ -932,7 +943,7 @@ class Handler(BaseHTTPRequestHandler):
                     "printed_name": printed_name,
                     "granted_by": granted_by,
                     "granted_date": granted_date,
-                    "signed_date": signed_date or datetime.now().date().isoformat(),
+                    "signed_date": signed_date or datetime.now(timezone.utc).date().isoformat(),
                     "witness": witness or None,
                     "signature_text": sig_text,
                     "signature_image_png_b64": data_url_to_b64(
@@ -958,7 +969,7 @@ class Handler(BaseHTTPRequestHandler):
                     "capacity": "Co-President (acknowledgment)",
                     "signature_text": sig_text,
                     "date": (payload.get("date") or "").strip()
-                    or datetime.now().date().isoformat(),
+                    or datetime.now(timezone.utc).date().isoformat(),
                     "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
                 }
                 save_record(record)
@@ -978,7 +989,7 @@ class Handler(BaseHTTPRequestHandler):
                     "capacity": "Justice of Democracy",
                     "signature_text": sig_text,
                     "date": (payload.get("date") or "").strip()
-                    or datetime.now().date().isoformat(),
+                    or datetime.now(timezone.utc).date().isoformat(),
                     "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
                 }
                 save_record(record)
