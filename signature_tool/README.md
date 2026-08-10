@@ -22,6 +22,16 @@ Self-test (no browser):
 python signature_manager.py --self-test
 ```
 
+## Download the Windows EXE
+
+After a green build on `main`, CI pushes the EXE to GitHub Releases:
+
+1. GitHub → **Releases** → **Piedonian Signature Manager (Windows)**  
+   ([`windows-signature-manager`](https://github.com/williamhoisington7/GOV/releases/tag/windows-signature-manager))
+2. Download **`PiedonianSignatureManager.exe`** and run it on Windows
+
+Fallback: **Actions** → **Build Signature Manager EXE** → latest green run → artifact **`PiedonianSignatureManager-windows`**.
+
 ## Build the Windows EXE
 
 On a Windows machine with Python 3.10+ installed:

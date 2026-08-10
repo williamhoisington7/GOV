@@ -33,11 +33,14 @@ Combines the Constitution and Signature Packet into **one** electronically signa
 
 ### Download the EXE package
 
-The Windows binary is built by GitHub Actions (not committed to git). After a green run of **Build Civic Document EXE**:
+The Windows binary is built by GitHub Actions (not committed to git). After a green run on `main`, the package is pushed to **GitHub Releases**:
 
-1. GitHub → **Actions** → **Build Civic Document EXE** → latest successful run
-2. Download artifact **`PiedonianCivicDocument-windows-x64`** (ZIP)
+1. GitHub → **Releases** → **Piedonian Civic Document (Windows)**  
+   Direct tag: [`windows-civic-document`](https://github.com/williamhoisington7/GOV/releases/tag/windows-civic-document)
+2. Download **`PiedonianCivicDocument-windows-x64.zip`**
 3. Unzip on Windows 11 and double-click `PiedonianCivicDocument.exe`
+
+Fallback (CI artifact, expires): GitHub → **Actions** → **Build Civic Document EXE** → latest green run → artifact **`PiedonianCivicDocument-windows-x64`**.
 
 Keep `wwwroot\` and `Content\` next to the EXE (included in the ZIP).  
 Records save to `data\civic_signatures.json` beside the EXE.

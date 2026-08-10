@@ -41,6 +41,9 @@ jobs:
   windows-exe:
     runs-on: windows-latest
     needs: test
+    permissions:
+      contents: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -92,3 +95,22 @@ jobs:
           name: PiedonianCivicDocument-windows-folder
           path: PiedonianCivicDocument/dist/
           if-no-files-found: error
+      - name: Push package to GitHub Releases
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: softprops/action-gh-release@v2.3.2
+        with:
+          tag_name: windows-civic-document
+          name: Piedonian Civic Document (Windows)
+          target_commitish: ${{ github.sha }}
+          body: |
+            Portable Windows 11 package built from `${{ github.sha }}`.
+
+            Download **PiedonianCivicDocument-windows-x64.zip**, unzip, and run `PiedonianCivicDocument.exe`.
+            Keep `wwwroot\`, `Content\`, and `data\` beside the EXE.
+          files: |
+            PiedonianCivicDocument/package/PiedonianCivicDocument-windows-x64.zip
+          fail_on_unmatched_files: true
+          # Rolling tag, not a semver release — leave the repo "latest" badge unset.
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
