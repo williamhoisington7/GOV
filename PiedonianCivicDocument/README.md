@@ -1,4 +1,4 @@
-# Piedonian Woods — Combined Civic Document (Windows 11 EXE)
+# Piedonian Woods — Combined Civic Document (Windows 11 package)
 
 Standalone **C#** application with **HTML / CSS / JavaScript** UI that combines:
 
@@ -11,12 +11,59 @@ into one electronically signable civic instrument for Windows 11.
 |:--|:--|
 | **Combined Document** | Full Constitution + Signature Packet in one viewer (print / Save PDF) |
 | **A — Founding Signature** | William Franklin Hoisington IV only · locks permanently after one use |
-| **B — Citizen Signature Roll** | Multi-add unlimited citizen enrollments |
-| **C–F** | Optional Co-President, Justice, witness, notary acknowledgments |
+| **B — Citizen Signature Roll** | Multi-add unlimited citizen enrollments · **signed date required** |
+| **C–F** | Optional Co-President, Justice, witness, notary · **signature date required** |
 
-## Run from source
+## What you get
+
+Open the app → someone **signs** → they **date** the signature → **save** → keep a permanent **record** (`data/civic_signatures.json`) and optional JSON/Markdown exports.
+
+## Download the Windows package (EXE)
+
+The EXE is **not** stored in git (it is large and rebuilt by CI). Get it from GitHub Actions:
+
+1. Open the repo on GitHub → **Actions**
+2. Workflow **Build Civic Document EXE**
+3. Open the latest green run → **Artifacts**
+4. Download **`PiedonianCivicDocument-windows-x64`** (ZIP)
+5. Unzip on Windows 11
+6. Double-click **`PiedonianCivicDocument.exe`**
+
+Keep these beside the EXE (they are inside the ZIP):
+
+```text
+PiedonianCivicDocument.exe
+wwwroot\
+Content\
+data\          (created automatically for signature records)
+```
+
+## Build the package yourself
 
 Requires [.NET 8 SDK](https://dotnet.microsoft.com/download).
+
+On Windows:
+
+```bat
+cd PiedonianCivicDocument
+build_windows.bat
+```
+
+On Linux/macOS (cross-compiles the Windows package):
+
+```bash
+cd PiedonianCivicDocument
+./build_windows.sh
+```
+
+Output:
+
+```text
+dist/PiedonianCivicDocument.exe
+package/PiedonianCivicDocument-windows-x64.zip
+```
+
+## Run from source
 
 ```bash
 cd PiedonianCivicDocument
@@ -31,35 +78,15 @@ dotnet run -- --self-test
 
 The app serves a local UI at `http://127.0.0.1:8777/` (or the next free port) and opens your browser.
 
-## Build Windows 11 EXE
+## How to sign and keep a record
 
-On Windows (PowerShell / cmd):
-
-```bat
-cd PiedonianCivicDocument
-build_windows.bat
-```
-
-Or:
-
-```bash
-cd PiedonianCivicDocument
-./build_windows.sh
-```
-
-Output (single-file self-contained):
-
-```text
-PiedonianCivicDocument/dist/PiedonianCivicDocument.exe
-```
-
-Double-click the EXE on Windows 11. Signature data is stored beside the EXE:
-
-```text
-data/civic_signatures.json
-```
-
-GitHub Actions workflow **Build Civic Document EXE** also produces the artifact on every change under `PiedonianCivicDocument/`.
+1. Open the app (EXE or `dotnet run`)
+2. Review the **Combined Document** tab
+3. Open the signature tab you need (Founding / Citizen / Optional)
+4. Enter the typed signature (and drawing if desired)
+5. **Enter the date the signee signs** (required for citizen and optional parts)
+6. Click save — the app writes `data/civic_signatures.json` next to the EXE
+7. Use **Records & Export** to download JSON or Markdown copies for filing
 
 ## Stack
 

@@ -25,15 +25,16 @@
       <div class="card">
         <h2>Standalone combined application document</h2>
         <div class="banner info">
-          This Windows application presents the <strong>Constitution</strong> and
-          <strong>Signature Packet</strong> as one civic instrument and records electronic signatures
-          for Parts A–F. It does not supersede United States, Texas, Merkel, or Taylor County law.
+          <strong>How to use:</strong> review the document → open a signature tab → type/draw the
+          signature → <strong>enter the signature date</strong> → save → keep the record under
+          <em>Records &amp; Export</em> (saved beside the app as <code>data/civic_signatures.json</code>).
+          This does not supersede United States, Texas, Merkel, or Taylor County law.
         </div>
         <div class="chip-row">
-          <span class="chip">C# backend</span>
-          <span class="chip">HTML + CSS + JavaScript UI</span>
-          <span class="chip">Windows 11 EXE</span>
-          <span class="chip">Electronic signature</span>
+          <span class="chip">Open · Sign · Date · Save</span>
+          <span class="chip">Windows 11 EXE package</span>
+          <span class="chip">Persistent civic record</span>
+          <span class="chip">Export JSON / Markdown</span>
         </div>
         <div class="doc-toolbar">
           <button class="secondary" type="button" data-doc="combined">Combined document</button>
@@ -105,8 +106,8 @@
         </div>
         <div class="row">
           <div>
-            <label>Date signed</label>
-            <input id="c-signed-date" type="date" />
+            <label>Date signed (required — signee dates the signature)</label>
+            <input id="c-signed-date" type="date" required />
           </div>
           <div>
             <label>Optional witness</label>
@@ -119,7 +120,7 @@
         <div class="sig-wrap"><canvas id="c-canvas" width="1000" height="180"></canvas></div>
         <div class="actions">
           <button class="secondary" type="button" id="c-clear">Clear drawing</button>
-          <button class="primary" type="button" id="c-save">Add Citizen Signature</button>
+          <button class="primary" type="button" id="c-save">Save Citizen Signature &amp; Date</button>
         </div>
         <div id="citizen-result" class="muted" style="margin-top:0.8rem"></div>
       </div>
@@ -129,6 +130,8 @@
       <div class="card">
         <h2>Optional acknowledgments (Parts C–F)</h2>
 
+        <p class="muted">Every acknowledgment requires a typed signature <strong>and</strong> the date the signee signs.</p>
+
         <h3>Part C — Co-President (Tommy James Lindsey)</h3>
         <div class="row">
           <div>
@@ -136,8 +139,8 @@
             <input id="o-co-sig" placeholder="Tommy James Lindsey" />
           </div>
           <div>
-            <label>Date</label>
-            <input id="o-co-date" type="date" />
+            <label>Date signed (required)</label>
+            <input id="o-co-date" type="date" required />
           </div>
         </div>
         <div class="actions">
@@ -151,8 +154,8 @@
             <input id="o-j-sig" placeholder="Ramon Santiago IV" />
           </div>
           <div>
-            <label>Date</label>
-            <input id="o-j-date" type="date" />
+            <label>Date signed (required)</label>
+            <input id="o-j-date" type="date" required />
           </div>
         </div>
         <div class="actions">
@@ -172,8 +175,8 @@
         </div>
         <div class="row">
           <div>
-            <label>Date</label>
-            <input id="o-w-date" type="date" />
+            <label>Date signed (required)</label>
+            <input id="o-w-date" type="date" required />
           </div>
           <div></div>
         </div>
@@ -204,8 +207,8 @@
         </div>
         <div class="row">
           <div>
-            <label>Date</label>
-            <input id="o-n-date" type="date" />
+            <label>Date signed (required)</label>
+            <input id="o-n-date" type="date" required />
           </div>
           <div></div>
         </div>
@@ -220,6 +223,10 @@
     <section id="records" class="panel">
       <div class="card">
         <h2>Civic record</h2>
+        <p class="muted">
+          Saved automatically beside the application as <code>data/civic_signatures.json</code>.
+          Export a copy anytime for filing.
+        </p>
         <div id="record-summary"></div>
         <div class="actions">
           <button class="secondary" type="button" id="btn-refresh">Refresh</button>

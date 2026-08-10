@@ -52,19 +52,44 @@ jobs:
           cp CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md PiedonianCivicDocument/Content/
           cp SIGNATURE_PACKET.md PiedonianCivicDocument/Content/
           cp PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md PiedonianCivicDocument/Content/
-      - name: Publish Windows single-file EXE
+      - name: Publish Windows portable package
         working-directory: PiedonianCivicDocument
         shell: bash
         run: |
           dotnet run -- --self-test
+          rm -rf dist package
+          mkdir -p dist package
           dotnet publish -c Release -r win-x64 --self-contained true \
             -p:PublishSingleFile=true \
             -p:IncludeNativeLibrariesForSelfExtract=true \
             -p:EnableCompressionInSingleFile=true \
             -o dist
-      - name: Upload EXE artifact
+          rm -f dist/*.pdb dist/*.xml || true
+          mkdir -p dist/data
+          touch dist/data/.gitkeep
+          # Full portable package — EXE alone is not enough (needs wwwroot + Content)
+          PACKAGE_NAME="PiedonianCivicDocument-windows-x64"
+          STAGE="package/${PACKAGE_NAME}"
+          mkdir -p "${STAGE}"
+          cp -a dist/. "${STAGE}/"
+          (
+            cd package
+            powershell.exe -NoProfile -Command "Compress-Archive -Path '${PACKAGE_NAME}\\*' -DestinationPath '${PACKAGE_NAME}.zip' -Force"
+          )
+          test -f "package/${PACKAGE_NAME}.zip"
+          test -f "dist/PiedonianCivicDocument.exe"
+          test -f "dist/wwwroot/index.html"
+          test -f "dist/Content/PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md"
+          ls -lh package/ dist/
+      - name: Upload portable ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PiedonianCivicDocument-windows
-          path: PiedonianCivicDocument/dist/PiedonianCivicDocument.exe
+          name: PiedonianCivicDocument-windows-x64
+          path: PiedonianCivicDocument/package/PiedonianCivicDocument-windows-x64.zip
+          if-no-files-found: error
+      - name: Upload unpacked folder artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PiedonianCivicDocument-windows-folder
+          path: PiedonianCivicDocument/dist/
           if-no-files-found: error

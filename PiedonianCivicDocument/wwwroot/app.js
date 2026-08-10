@@ -554,13 +554,13 @@
           printed_name: document.getElementById("c-name").value.trim(),
           granted_by: document.getElementById("c-granted-by").value.trim(),
           granted_date: document.getElementById("c-granted-date").value,
-          signed_date: document.getElementById("c-signed-date").value || todayISO(),
+          signed_date: document.getElementById("c-signed-date").value,
           witness: document.getElementById("c-witness").value.trim(),
           signature_text: document.getElementById("c-sig-text").value.trim(),
           signature_image_data_url: cPad.toDataUrl()
         };
-        if (!body.printed_name || !body.granted_by || !body.granted_date || !body.signature_text) {
-          alert("Citizen name, granted by, granted date, and typed signature are required.");
+        if (!body.printed_name || !body.granted_by || !body.granted_date || !body.signed_date || !body.signature_text) {
+          alert("Citizen name, granted by, granted date, signed date, and typed signature are required. The signee must date the signature.");
           return;
         }
         const rec = await api("/api/citizen", {
@@ -582,15 +582,27 @@
       }
     };
 
+    function requireDatedSignature(sig, date, label) {
+      if (!sig) {
+        alert(label + ": typed signature is required.");
+        return false;
+      }
+      if (!date) {
+        alert(label + ": date is required. The signee must date the signature.");
+        return false;
+      }
+      return true;
+    }
+
     document.getElementById("o-co-save").onclick = async function () {
       try {
+        const signature_text = document.getElementById("o-co-sig").value.trim();
+        const date = document.getElementById("o-co-date").value;
+        if (!requireDatedSignature(signature_text, date, "Co-President")) return;
         const rec = await api("/api/optional/co_president", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            signature_text: document.getElementById("o-co-sig").value.trim(),
-            date: document.getElementById("o-co-date").value || todayISO()
-          })
+          body: JSON.stringify({ signature_text: signature_text, date: date })
         });
         document.getElementById("optional-result").textContent =
           "Co-President acknowledgment saved.";
@@ -602,13 +614,13 @@
 
     document.getElementById("o-j-save").onclick = async function () {
       try {
+        const signature_text = document.getElementById("o-j-sig").value.trim();
+        const date = document.getElementById("o-j-date").value;
+        if (!requireDatedSignature(signature_text, date, "Justice")) return;
         const rec = await api("/api/optional/justice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            signature_text: document.getElementById("o-j-sig").value.trim(),
-            date: document.getElementById("o-j-date").value || todayISO()
-          })
+          body: JSON.stringify({ signature_text: signature_text, date: date })
         });
         document.getElementById("optional-result").textContent = "Justice acknowledgment saved.";
         renderRecords(rec);
@@ -619,13 +631,21 @@
 
     document.getElementById("o-w-save").onclick = async function () {
       try {
+        const printed_name = document.getElementById("o-w-name").value.trim();
+        const signature_text = document.getElementById("o-w-sig").value.trim();
+        const date = document.getElementById("o-w-date").value;
+        if (!printed_name) {
+          alert("Witness printed name is required.");
+          return;
+        }
+        if (!requireDatedSignature(signature_text, date, "Witness")) return;
         const rec = await api("/api/optional/witness", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            printed_name: document.getElementById("o-w-name").value.trim(),
-            signature_text: document.getElementById("o-w-sig").value.trim(),
-            date: document.getElementById("o-w-date").value || todayISO()
+            printed_name: printed_name,
+            signature_text: signature_text,
+            date: date
           })
         });
         document.getElementById("optional-result").textContent = "Witness acknowledgment saved.";
@@ -637,15 +657,23 @@
 
     document.getElementById("o-n-save").onclick = async function () {
       try {
+        const printed_name = document.getElementById("o-n-name").value.trim();
+        const signature_text = document.getElementById("o-n-sig").value.trim();
+        const date = document.getElementById("o-n-date").value;
+        if (!printed_name) {
+          alert("Notary printed name is required.");
+          return;
+        }
+        if (!requireDatedSignature(signature_text, date, "Notary")) return;
         const rec = await api("/api/optional/notary", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            printed_name: document.getElementById("o-n-name").value.trim(),
-            signature_text: document.getElementById("o-n-sig").value.trim(),
+            printed_name: printed_name,
+            signature_text: signature_text,
             county: document.getElementById("o-n-county").value.trim(),
             commission_expires: document.getElementById("o-n-commission").value,
-            date: document.getElementById("o-n-date").value || todayISO()
+            date: date
           })
         });
         document.getElementById("optional-result").textContent = "Notary acknowledgment saved.";
