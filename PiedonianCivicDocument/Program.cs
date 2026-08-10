@@ -23,14 +23,8 @@ internal static class AppConstants
 
 internal static class Paths
 {
-    public static string AppRoot
-    {
-        get
-        {
-            var baseDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            return baseDir;
-        }
-    }
+    public static string AppRoot =>
+        AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
     public static string WwwRoot => Path.Combine(AppRoot, "wwwroot");
     public static string ContentRoot => Path.Combine(AppRoot, "Content");
@@ -758,7 +752,7 @@ internal sealed class LocalServer
                 ["signatureText"] = sigText,
                 ["commissionExpires"] = commission.Length > 0 ? commission : null,
                 ["county"] = county.Length > 0 ? county : null,
-                ["date"] = NonEmpty(GetStr(payload, "date"), AppConstants.FoundingDateIso),
+                ["date"] = NonEmpty(GetStr(payload, "date"), DateTime.UtcNow.ToString("yyyy-MM-dd")),
                 ["recordedAtUtc"] = DateTime.UtcNow.ToString("O")
             };
             RecordStore.Save(record, _recordOverride);
