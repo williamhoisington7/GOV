@@ -12,34 +12,49 @@ Prepared for civic record and professional presentment (including informational 
 |------|---------|
 | [`CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md`](./CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md) | Full organic constitution, governance, Bill of Rights, and Signature Annex |
 | [`SIGNATURE_PACKET.md`](./SIGNATURE_PACKET.md) | Printable founding / citizen-roll / witness / notary packet |
-| [`signature_tool/`](./signature_tool/) | **Signature Manager app + Windows EXE build** (one-time founding + multi-add citizen roll) |
+| [`PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md`](./PIEDONIAN_COMBINED_CIVIC_DOCUMENT.md) | **Combined** Constitution + Signature Packet (single application document) |
+| [`PiedonianCivicDocument/`](./PiedonianCivicDocument/) | **Windows 11 standalone EXE** (C# + HTML/CSS/JavaScript) — combined document + electronic signatures |
+| [`signature_tool/`](./signature_tool/) | Legacy Python Signature Manager + EXE build |
 
-## Signature Manager EXE
+## Standalone Windows 11 application (primary)
 
-Electronic companion to the wet-ink packet:
+Combines the Constitution and Signature Packet into **one** electronically signable desktop app:
 
 | Part | Rule in the app |
 |:--|:--|
+| **Combined Document** | Full text viewer (Constitution + Packet) · print / Save PDF |
 | **A — Founding Signature** | **William Franklin Hoisington IV** only · typed name must match exactly · **locks permanently** after one use |
 | **B — Citizen Signature Roll** | **Multi-add** · new numbered entry for every new citizen |
+| **C–F** | Optional Co-President, Justice, witness, and notary acknowledgments |
+
+**Stack:** C# (.NET 8) backend · HTML + CSS + JavaScript UI
 
 **Run from source:**
 
 ```bash
-python signature_tool/signature_manager.py
+cd PiedonianCivicDocument
+dotnet run
 ```
 
-**Build Windows EXE** (on Windows, or via the GitHub Actions workflow `Build Signature Manager EXE`):
+**Build Windows EXE** (on Windows, or via GitHub Actions workflow `Build Civic Document EXE`):
 
 ```bat
-cd signature_tool
+cd PiedonianCivicDocument
 build_windows.bat
 ```
 
-Output: `signature_tool\dist\PiedonianSignatureManager.exe`  
-Data file (beside the EXE): `data\civic_signatures.json`  
+Output: `PiedonianCivicDocument\dist\PiedonianCivicDocument.exe`  
+Data file (beside the EXE): `data\civic_signatures.json`
 
-See [`signature_tool/README.md`](./signature_tool/README.md) for full usage.
+See [`PiedonianCivicDocument/README.md`](./PiedonianCivicDocument/README.md) for full usage.
+
+## Legacy Python Signature Manager
+
+Still available under [`signature_tool/`](./signature_tool/) if needed:
+
+```bash
+python signature_tool/signature_manager.py
+```
 
 ## Constitution highlights
 
@@ -72,12 +87,12 @@ See [`signature_tool/README.md`](./signature_tool/README.md) for full usage.
 
 ## How to execute
 
-1. Review `CONSTITUTION_OF_THE_PIEDONIAN_WOODS.md`
-2. Print the Constitution Signature Annex and/or `SIGNATURE_PACKET.md`
-3. Affix the **Founding Signature** (Part A) **once** on **10 August 2026**, then close that block permanently
-4. Optionally obtain Co-President, Justice of Democracy, witness, and notary acknowledgments
-5. For each new citizen, add a **Citizen Signature Roll** entry (Part B / continuations)
-6. File wet-ink originals with the civic record at the Seat
+1. Open `PiedonianCivicDocument.exe` (or `dotnet run` in `PiedonianCivicDocument/`)
+2. Review the **Combined Document** tab (Constitution + Signature Packet)
+3. Affix the **Founding Signature** (Part A) **once**, then the app closes that block permanently
+4. Optionally record Co-President, Justice, witness, and notary acknowledgments
+5. For each new citizen, add a **Citizen Signature Roll** entry (Part B)
+6. Export JSON / Markdown records; file wet-ink originals with the civic record at the Seat when required
 
 ## Legal note
 

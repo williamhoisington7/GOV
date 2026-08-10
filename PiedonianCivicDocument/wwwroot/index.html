@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Piedonian Woods Civic Document</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1 id="app-title">Piedonian Woods Civic Document</h1>
+    <p id="app-seat">Seat of Record: 805 N 4th, Merkel, TX 79536, United States of America</p>
+  </header>
+
+  <main>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="document" type="button">Combined Document</button>
+      <button class="tab" data-tab="founding" type="button">Part A · Founding</button>
+      <button class="tab" data-tab="citizen" type="button">Part B · Citizen Roll</button>
+      <button class="tab" data-tab="optional" type="button">Parts C–F · Optional</button>
+      <button class="tab" data-tab="records" type="button">Records &amp; Export</button>
+    </div>
+
+    <section id="document" class="panel active">
+      <div class="card">
+        <h2>Standalone combined application document</h2>
+        <div class="banner info">
+          This Windows application presents the <strong>Constitution</strong> and
+          <strong>Signature Packet</strong> as one civic instrument and records electronic signatures
+          for Parts A–F. It does not supersede United States, Texas, Merkel, or Taylor County law.
+        </div>
+        <div class="chip-row">
+          <span class="chip">C# backend</span>
+          <span class="chip">HTML + CSS + JavaScript UI</span>
+          <span class="chip">Windows 11 EXE</span>
+          <span class="chip">Electronic signature</span>
+        </div>
+        <div class="doc-toolbar">
+          <button class="secondary" type="button" data-doc="combined">Combined document</button>
+          <button class="secondary" type="button" data-doc="constitution">Constitution only</button>
+          <button class="secondary" type="button" data-doc="packet">Signature packet only</button>
+          <button class="secondary" type="button" id="btn-print-doc">Print / Save PDF</button>
+        </div>
+        <div id="doc-view" class="doc-view" aria-live="polite">Loading document…</div>
+      </div>
+    </section>
+
+    <section id="founding" class="panel">
+      <div class="card">
+        <h2>Part A — Founding Signature (one time only)</h2>
+        <div id="founding-banner" class="banner warn"></div>
+        <div class="row">
+          <div>
+            <label>Printed name (fixed)</label>
+            <input id="f-name" readonly />
+          </div>
+          <div>
+            <label>Capacity (fixed)</label>
+            <input id="f-capacity" readonly />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Date of founding execution (fixed)</label>
+            <input id="f-date" readonly />
+          </div>
+          <div>
+            <label>Typed legal signature (full legal name)</label>
+            <input id="f-sig-text" autocomplete="off" />
+          </div>
+        </div>
+        <label>Drawn signature (optional but recommended)</label>
+        <div class="sig-wrap"><canvas id="f-canvas" width="1000" height="180"></canvas></div>
+        <div class="actions">
+          <button class="secondary" type="button" id="f-clear">Clear drawing</button>
+          <button class="primary" type="button" id="f-save">Affix Founding Signature &amp; Close Permanently</button>
+        </div>
+        <div id="founding-result" class="muted" style="margin-top:0.8rem"></div>
+      </div>
+    </section>
+
+    <section id="citizen" class="panel">
+      <div class="card">
+        <h2>Part B — Citizen Signature Roll (multi-add)</h2>
+        <p class="muted">Add a new entry every time citizenship is granted. Entries never replace the founding signature.</p>
+        <div class="row">
+          <div>
+            <label>Entry number</label>
+            <input id="c-entry" readonly />
+          </div>
+          <div>
+            <label>Printed name of citizen</label>
+            <input id="c-name" placeholder="Citizen full legal name" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Citizenship granted by (President / Co-President)</label>
+            <input id="c-granted-by" placeholder="e.g. William Franklin Hoisington IV" />
+          </div>
+          <div>
+            <label>Date citizenship granted</label>
+            <input id="c-granted-date" type="date" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Date signed</label>
+            <input id="c-signed-date" type="date" />
+          </div>
+          <div>
+            <label>Optional witness</label>
+            <input id="c-witness" placeholder="Witness name (optional)" />
+          </div>
+        </div>
+        <label>Typed signature of citizen</label>
+        <input id="c-sig-text" placeholder="Type full legal name as signature" />
+        <label>Drawn signature</label>
+        <div class="sig-wrap"><canvas id="c-canvas" width="1000" height="180"></canvas></div>
+        <div class="actions">
+          <button class="secondary" type="button" id="c-clear">Clear drawing</button>
+          <button class="primary" type="button" id="c-save">Add Citizen Signature</button>
+        </div>
+        <div id="citizen-result" class="muted" style="margin-top:0.8rem"></div>
+      </div>
+    </section>
+
+    <section id="optional" class="panel">
+      <div class="card">
+        <h2>Optional acknowledgments (Parts C–F)</h2>
+
+        <h3>Part C — Co-President (Tommy James Lindsey)</h3>
+        <div class="row">
+          <div>
+            <label>Typed signature</label>
+            <input id="o-co-sig" placeholder="Tommy James Lindsey" />
+          </div>
+          <div>
+            <label>Date</label>
+            <input id="o-co-date" type="date" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="button" id="o-co-save">Save Co-President acknowledgment</button>
+        </div>
+
+        <h3>Part D — Justice of Democracy (Ramon Santiago IV)</h3>
+        <div class="row">
+          <div>
+            <label>Typed signature</label>
+            <input id="o-j-sig" placeholder="Ramon Santiago IV" />
+          </div>
+          <div>
+            <label>Date</label>
+            <input id="o-j-date" type="date" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="button" id="o-j-save">Save Justice acknowledgment</button>
+        </div>
+
+        <h3>Part E — Optional Witness (Founding Execution)</h3>
+        <div class="row">
+          <div>
+            <label>Printed name</label>
+            <input id="o-w-name" placeholder="Witness printed name" />
+          </div>
+          <div>
+            <label>Typed signature</label>
+            <input id="o-w-sig" placeholder="Witness signature" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Date</label>
+            <input id="o-w-date" type="date" />
+          </div>
+          <div></div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="button" id="o-w-save">Save Witness acknowledgment</button>
+        </div>
+
+        <h3>Part F — Optional Notary Acknowledgment</h3>
+        <div class="row">
+          <div>
+            <label>Notary printed name</label>
+            <input id="o-n-name" />
+          </div>
+          <div>
+            <label>Notary signature</label>
+            <input id="o-n-sig" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>County (Texas)</label>
+            <input id="o-n-county" placeholder="e.g. Taylor" />
+          </div>
+          <div>
+            <label>Commission expires</label>
+            <input id="o-n-commission" type="date" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Date</label>
+            <input id="o-n-date" type="date" />
+          </div>
+          <div></div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="button" id="o-n-save">Save Notary acknowledgment</button>
+        </div>
+
+        <div id="optional-result" class="muted" style="margin-top:0.8rem"></div>
+      </div>
+    </section>
+
+    <section id="records" class="panel">
+      <div class="card">
+        <h2>Civic record</h2>
+        <div id="record-summary"></div>
+        <div class="actions">
+          <button class="secondary" type="button" id="btn-refresh">Refresh</button>
+          <button class="secondary" type="button" id="btn-export-json">Export JSON</button>
+          <button class="secondary" type="button" id="btn-export-md">Export Markdown record</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Citizen entries</h2>
+        <div id="citizen-table"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    Private community instrument · does not create sovereign statehood · data file:
+    <code>data/civic_signatures.json</code>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
