@@ -109,6 +109,7 @@ jobs:
           files: |
             PiedonianCivicDocument/package/PiedonianCivicDocument-windows-x64.zip
           fail_on_unmatched_files: true
-          make_latest: true
+          # Rolling tag, not a semver release — leave the repo "latest" badge unset.
+          make_latest: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
