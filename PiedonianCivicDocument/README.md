@@ -20,14 +20,15 @@ Open the app → someone **signs** → they **date** the signature → **save** 
 
 ## Download the Windows package (EXE)
 
-The EXE is **not** stored in git (it is large and rebuilt by CI). Get it from GitHub Actions:
+The EXE is **not** stored in git (it is large and rebuilt by CI). After a green build on `main`, CI **pushes** the package to GitHub Releases:
 
-1. Open the repo on GitHub → **Actions**
-2. Workflow **Build Civic Document EXE**
-3. Open the latest green run → **Artifacts**
-4. Download **`PiedonianCivicDocument-windows-x64`** (ZIP)
-5. Unzip on Windows 11
-6. Double-click **`PiedonianCivicDocument.exe`**
+1. Open the repo on GitHub → **Releases** → **Piedonian Civic Document (Windows)**  
+   ([`windows-civic-document`](https://github.com/williamhoisington7/GOV/releases/tag/windows-civic-document))
+2. Download **`PiedonianCivicDocument-windows-x64.zip`**
+3. Unzip on Windows 11
+4. Double-click **`PiedonianCivicDocument.exe`**
+
+Fallback: **Actions** → **Build Civic Document EXE** → latest green run → artifact **`PiedonianCivicDocument-windows-x64`**.
 
 Keep these beside the EXE (they are inside the ZIP):
 

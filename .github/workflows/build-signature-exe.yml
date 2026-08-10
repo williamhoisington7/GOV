@@ -29,6 +29,8 @@ jobs:
   windows-exe:
     runs-on: windows-latest
     needs: test
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -47,3 +49,21 @@ jobs:
           name: PiedonianSignatureManager-windows
           path: signature_tool/dist/PiedonianSignatureManager.exe
           if-no-files-found: error
+      - name: Push EXE to GitHub Releases
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: softprops/action-gh-release@v2.3.2
+        with:
+          tag_name: windows-signature-manager
+          name: Piedonian Signature Manager (Windows)
+          target_commitish: ${{ github.sha }}
+          body: |
+            Windows Signature Manager EXE built from `${{ github.sha }}`.
+
+            Download **PiedonianSignatureManager.exe** and run it on Windows.
+            Signature records are stored in `data\civic_signatures.json` beside the EXE.
+          files: |
+            signature_tool/dist/PiedonianSignatureManager.exe
+          fail_on_unmatched_files: true
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
