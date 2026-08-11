@@ -22,7 +22,7 @@ Combines the Constitution and Signature Packet into **one** electronically signa
 
 | Part | Rule in the app |
 |:--|:--|
-| **Combined Document** | Full text viewer (Constitution + Packet) · print / Save PDF |
+| **Combined Document** | Full text viewer (Constitution + Packet) · print / Save PDF · download Constitution file |
 | **A — Founding Signature** | **William Franklin Hoisington IV** only · typed name must match exactly · **locks permanently** after one use |
 | **B — Citizen Signature Roll** | **Multi-add** · new numbered entry for every new citizen · **signee must date** the signature |
 | **C–F** | Optional Co-President, Justice, witness, and notary acknowledgments · **date required** |

@@ -504,6 +504,9 @@
     document.getElementById("btn-print-doc").addEventListener("click", function () {
       window.print();
     });
+    document.getElementById("btn-download-constitution").addEventListener("click", function () {
+      window.location.href = "/api/download/constitution";
+    });
 
     document.getElementById("f-clear").onclick = function () {
       fPad.clear();
